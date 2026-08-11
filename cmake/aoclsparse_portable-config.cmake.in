@@ -1,0 +1,21 @@
+# AOCL-Sparse Portable CMake config
+# Usage: find_package(aoclsparse_portable REQUIRED)
+# Provides:
+#   aoclsparse_portable::aoclsparse_portable  - imported shared library target
+#   AOCLSPARSE_PORTABLE_INCLUDE_DIRS           - include directories
+#   AOCLSPARSE_PORTABLE_LIBRARIES              - library to link against
+set(AOCLSPARSE_PORTABLE_VERSION "1.0.0")
+
+# Compute install prefix from this file's location
+get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
+
+set(AOCLSPARSE_PORTABLE_INCLUDE_DIRS "${_IMPORT_PREFIX}/include")
+set(AOCLSPARSE_PORTABLE_LIBRARIES    "${_IMPORT_PREFIX}/lib/libaoclsparse_portable.so")
+
+add_library(aoclsparse_portable::aoclsparse_portable SHARED IMPORTED)
+set_target_properties(aoclsparse_portable::aoclsparse_portable PROPERTIES
+    IMPORTED_LOCATION          "${AOCLSPARSE_PORTABLE_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${AOCLSPARSE_PORTABLE_INCLUDE_DIRS}"
+    INTERFACE_COMPILE_OPTIONS  "-fopenmp"
+    INTERFACE_LINK_LIBRARIES   "gomp"
+)

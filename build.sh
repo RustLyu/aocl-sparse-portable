@@ -21,6 +21,9 @@ CPU_FLAGS="-mcpu=cortex-a15 -mfpu=neon -mfloat-abi=hard"
 # --- OpenMP -------------------------------------------------------
 OMP_LIB="${TOOLCHAIN_DIR}/arm-linux-gnueabihf/lib/libgomp.so"
 
+# --- Install prefix (change to suit your toolchain / sysroot) -----
+INSTALL_PREFIX="${HOME}/opt/arm-v7-a/aocl-sparse-portable"
+
 # ------------------------------------------------------------------
 # Step 1: Cross-compile the shared library
 # ------------------------------------------------------------------
@@ -63,6 +66,26 @@ echo "Test built: ${TEST_BUILD_DIR}/test_spmm"
 echo ""
 
 # ------------------------------------------------------------------
+# Step 3: Install to prefix
+# ------------------------------------------------------------------
+echo "=============================================="
+echo "Step 3: Installing to ${INSTALL_PREFIX} ..."
+echo "=============================================="
+
+mkdir -p "${INSTALL_PREFIX}/lib" "${INSTALL_PREFIX}/include" "${INSTALL_PREFIX}/lib/cmake/aoclsparse_portable"
+cp "${BUILD_DIR}/libaoclsparse_portable.so" "${INSTALL_PREFIX}/lib/"
+cp "${SCRIPT_DIR}/include/"*.h   "${INSTALL_PREFIX}/include/"
+cp "${SCRIPT_DIR}/include/"*.hpp "${INSTALL_PREFIX}/include/"
+cp "${BUILD_DIR}/include/aoclsparse_version.h" "${INSTALL_PREFIX}/include/"
+cp "${SCRIPT_DIR}/cmake/aoclsparse_portable-config.cmake.in" \
+   "${INSTALL_PREFIX}/lib/cmake/aoclsparse_portable/aoclsparse_portable-config.cmake"
+
+echo ""
+echo "Installed files:"
+find "${INSTALL_PREFIX}" -type f | sort
+echo ""
+
+# ------------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------------
 echo "=============================================="
@@ -70,6 +93,9 @@ echo "Build complete"
 echo "=============================================="
 file "${BUILD_DIR}/libaoclsparse_portable.so"
 file "${TEST_BUILD_DIR}/test_spmm"
+echo ""
+echo "Library:  ${INSTALL_PREFIX}/lib/libaoclsparse_portable.so"
+echo "Headers:  ${INSTALL_PREFIX}/include/"
 echo ""
 echo "Run on target:"
 echo "  LD_LIBRARY_PATH=. ./test_spmm"
