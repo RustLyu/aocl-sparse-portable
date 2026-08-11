@@ -112,7 +112,7 @@ aoclsparse_status aoclsparse::mv(aoclsparse_operation       op,
     if(!is_mtx_frmt_supported<T>(A->input_format))
         return aoclsparse_status_not_implemented;
 
-    if constexpr(!is_dt_complex<T>())
+    if(!is_dt_complex<T>())
     {
         if(op == aoclsparse_operation_conjugate_transpose)
             op = aoclsparse_operation_transpose;

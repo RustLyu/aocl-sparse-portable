@@ -428,7 +428,7 @@ aoclsparse_status aoclsparse_convert_mat_to_general(const aoclsparse_int        
                 col_pos++;
 
                 //Symmetrized triangle
-                if constexpr(HERM)
+                if(HERM)
                     symm_val[current_pos[j]] = aoclsparse::conj(csr_val[idx]);
                 else
                     symm_val[current_pos[j]] = csr_val[idx];
@@ -437,7 +437,7 @@ aoclsparse_status aoclsparse_convert_mat_to_general(const aoclsparse_int        
             }
             else if(j == i)
             {
-                if constexpr(HERM)
+                if(HERM)
                     diag = std::real(csr_val[idx]);
                 else
                     diag = csr_val[idx];
@@ -495,10 +495,7 @@ aoclsparse_status aoclsparse_set_mat_diag(const aoclsparse_int        m,
     else
     {
         if(descr.diag_type == aoclsparse_diag_type_unit)
-            if constexpr(std::is_same_v<T, float> || std::is_same_v<T, double>)
-                diag_val = 1.0;
-            else
-                diag_val = {1, 0};
+                diag_val = static_cast<T>(1);
 
         else if(descr.diag_type == aoclsparse_diag_type_zero)
             diag_val = aoclsparse_numeric::zero<T>();

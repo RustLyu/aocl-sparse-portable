@@ -65,24 +65,29 @@ namespace aoclsparse
         return static_cast<unsigned int>(a) & b;
     }
 
+    inline aoclsparse_int env_get_var_impl(char *str, aoclsparse_int *)
+    {
+        return static_cast<aoclsparse_int>(strtol(str, NULL, 10));
+    }
+    inline std::string env_get_var_impl(char *str, std::string *)
+    {
+        return std::string(str);
+    }
+    template <typename T>
+    T env_get_var_impl(char *str, T *)
+    {
+        return T(str);
+    }
+
     template <typename T>
     T env_get_var(const char *env, const T fallback)
     {
-        T     r_val;
         char *str;
 
         str = getenv(env);
         if(str != NULL)
         {
-            if constexpr(std::is_same_v<T, aoclsparse_int>)
-            {
-                r_val = static_cast<aoclsparse_int>(strtol(str, NULL, 10));
-                return r_val;
-            }
-            else if constexpr(std::is_same_v<T, std::string>)
-            {
-                return std::string(str);
-            }
+            return env_get_var_impl(str, static_cast<T *>(nullptr));
         }
 
         return fallback;
@@ -133,10 +138,16 @@ namespace aoclsparse
         context(context &&t) = delete;
         void operator=(context &&t) = delete;
 
-        template <context_isa_t... isa>
+        template <context_isa_t first, context_isa_t... rest>
         bool supports()
         {
-            return (... && this->cpuflags[static_cast<aoclsparse_int>(isa)]);
+            return this->cpuflags[static_cast<aoclsparse_int>(first)]
+                && supports<rest...>();
+        }
+        template <context_isa_t single>
+        bool supports()
+        {
+            return this->cpuflags[static_cast<aoclsparse_int>(single)];
         }
 
         bool supports(context_isa_t isa)

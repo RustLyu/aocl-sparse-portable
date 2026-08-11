@@ -87,7 +87,7 @@ namespace aoclsparse
         aoclsparse_fill_mode   fm    = descr->fill_mode;
 
         // For real types, simplify the operation and matrix type
-        if constexpr(std::is_same_v<float, T> || std::is_same_v<double, T>)
+        if(std::is_same<float, T>::value || std::is_same<double, T>::value)
         {
             if(op_t == aoclsparse_operation_conjugate_transpose)
                 op_t = aoclsparse_operation_transpose;

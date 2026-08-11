@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(aoclsparse_portable VERSION 5.3.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(SUPPORT_OMP "Enable OpenMP support" ON)
@@ -46,8 +46,8 @@ configure_file(
     ${CMAKE_CURRENT_BINARY_DIR}/include/aoclsparse_version.h
 )
 
-# Static library
-add_library(aoclsparse_portable STATIC
+# Shared library
+add_library(aoclsparse_portable SHARED
     src/auxiliary/aoclsparse_auxiliary.cpp
     src/analysis/aoclsparse_csr_util.cpp
     src/level2/aoclsparse_mv.cpp

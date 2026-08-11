@@ -276,15 +276,15 @@ inline aoclsparse_status aoclsparse_sp2md_t(const aoclsparse_operation      opA,
         return aoclsparse_status_not_implemented;
     }
     // Verify the matrix types and T are consistent
-    if(!((A->val_type == aoclsparse_smat && std::is_same_v<T, float>)
-         || (A->val_type == aoclsparse_dmat && std::is_same_v<T, double>)
-         || (A->val_type == aoclsparse_cmat && std::is_same_v<T, std::complex<float>>)
-         || (A->val_type == aoclsparse_zmat && std::is_same_v<T, std::complex<double>>)))
+    if(!((A->val_type == aoclsparse_smat && std::is_same<T, float>::value)
+         || (A->val_type == aoclsparse_dmat && std::is_same<T, double>::value)
+         || (A->val_type == aoclsparse_cmat && std::is_same<T, std::complex<float>>::value)
+         || (A->val_type == aoclsparse_zmat && std::is_same<T, std::complex<double>>::value)))
         return aoclsparse_status_wrong_type;
-    if(!((B->val_type == aoclsparse_smat && std::is_same_v<T, float>)
-         || (B->val_type == aoclsparse_dmat && std::is_same_v<T, double>)
-         || (B->val_type == aoclsparse_cmat && std::is_same_v<T, std::complex<float>>)
-         || (B->val_type == aoclsparse_zmat && std::is_same_v<T, std::complex<double>>)))
+    if(!((B->val_type == aoclsparse_smat && std::is_same<T, float>::value)
+         || (B->val_type == aoclsparse_dmat && std::is_same<T, double>::value)
+         || (B->val_type == aoclsparse_cmat && std::is_same<T, std::complex<float>>::value)
+         || (B->val_type == aoclsparse_zmat && std::is_same<T, std::complex<double>>::value)))
         return aoclsparse_status_wrong_type;
 
     aoclsparse_int combined_op_type = get_combined_op_type(opA, opB);

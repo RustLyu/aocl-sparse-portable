@@ -119,7 +119,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
                 aoclsparse_int jstart = csr_row_ptr_A[i];
                 aoclsparse_int jend   = csr_row_ptr_A[i + 1];
                 // If baseA is 1
-                if constexpr(BASEA)
+                if(BASEA)
                 {
                     jstart -= baseA;
                     jend -= baseA;
@@ -130,7 +130,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
                 {
                     // Current column of A
                     aoclsparse_int col_A = csr_col_ind_A[j];
-                    if constexpr(BASEA)
+                    if(BASEA)
                     {
                         col_A -= baseA;
                     }
@@ -138,7 +138,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
                     aoclsparse_int k_iter  = nnz_row / 4;
                     aoclsparse_int k_rem   = nnz_row % 4;
                     aoclsparse_int row_B   = csr_row_ptr_B[col_A];
-                    if constexpr(BASEB)
+                    if(BASEB)
                     {
                         row_B -= baseB;
                     }
@@ -148,7 +148,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
                     {
                         // Current column of B
                         aoclsparse_int col_B = csr_col_ind_B[row_B + k];
-                        if constexpr(BASEB)
+                        if(BASEB)
                         {
                             col_B -= baseB;
                         }
@@ -162,7 +162,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
 
                         // Current column of B
                         col_B = csr_col_ind_B[row_B + k + 1];
-                        if constexpr(BASEB)
+                        if(BASEB)
                         {
                             col_B -= baseB;
                         }
@@ -176,7 +176,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
 
                         // Current column of B
                         col_B = csr_col_ind_B[row_B + k + 2];
-                        if constexpr(BASEB)
+                        if(BASEB)
                         {
                             col_B -= baseB;
                         }
@@ -190,7 +190,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
 
                         // Current column of B
                         col_B = csr_col_ind_B[row_B + k + 3];
-                        if constexpr(BASEB)
+                        if(BASEB)
                         {
                             col_B -= baseB;
                         }
@@ -207,7 +207,7 @@ inline aoclsparse_status aoclsparse_csr2m_nnz_count(aoclsparse_int             m
                     {
                         // Current column of B
                         aoclsparse_int col_B = csr_col_ind_B[row_B + (k_iter * 4) + k];
-                        if constexpr(BASEB)
+                        if(BASEB)
                         {
                             col_B -= baseB;
                         }
@@ -457,7 +457,7 @@ inline aoclsparse_status aoclsparse_csr2m_finalize(aoclsparse_int             m_
             {
                 aoclsparse_int row_begin_A = csr_row_ptr_A[i];
                 aoclsparse_int row_end_A   = csr_row_ptr_A[i + 1];
-                if constexpr(BASEA)
+                if(BASEA)
                 {
                     row_begin_A -= baseA;
                     row_end_A -= baseA;
@@ -470,7 +470,7 @@ inline aoclsparse_status aoclsparse_csr2m_finalize(aoclsparse_int             m_
                 {
                     // Current column of A
                     aoclsparse_int col_A = csr_col_ind_A[j];
-                    if constexpr(BASEA)
+                    if(BASEA)
                     {
                         col_A -= baseA;
                     }
@@ -481,7 +481,7 @@ inline aoclsparse_status aoclsparse_csr2m_finalize(aoclsparse_int             m_
 
                     aoclsparse_int row_begin_B = csr_row_ptr_B[col_A];
                     aoclsparse_int row_end_B   = csr_row_ptr_B[col_A + 1];
-                    if constexpr(BASEB)
+                    if(BASEB)
                     {
                         row_begin_B -= baseB;
                         row_end_B -= baseB;
@@ -521,7 +521,7 @@ inline aoclsparse_status aoclsparse_csr2m_finalize(aoclsparse_int             m_
                     for(idxC = csr_row_ptr_C[i]; idxC < csr_row_ptr_C[i + 1]; idxC++)
                     {
                         csr_val_C[idxC] = acc[csr_col_ind_C[idxC]].sum;
-                        if constexpr(BASEB)
+                        if(BASEB)
                         {
                             csr_col_ind_C[idxC] -= baseB;
                         }
@@ -626,7 +626,7 @@ aoclsparse_status aoclsparse::sp2m(aoclsparse_operation       opA,
         return aoclsparse_status_not_implemented;
     }
     // For double and float , conjugate transpose is same as transpose
-    if constexpr(std::is_same_v<T, double> || std::is_same_v<T, float>)
+    if(std::is_same<T, double>::value || std::is_same<T, float>::value)
     {
         if(opA == aoclsparse_operation_conjugate_transpose)
         {

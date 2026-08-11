@@ -35,6 +35,8 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <typeinfo>
+#include <typeinfo>
 
 aoclsparse_status aoclsparse_destroy_ilu(_aoclsparse_ilu *ilu_info);
 aoclsparse_status aoclsparse_destroy_mats(aoclsparse_matrix A);
@@ -186,6 +188,16 @@ aoclsparse_status aoclsparse_create_tcsr_t(aoclsparse_matrix          *mat,
         (*mat)->sort = aoclsparse_fully_sorted;
     return aoclsparse_status_success;
 }
+
+template <typename T>
+aoclsparse_status aoclsparse_create_csr_t(aoclsparse_matrix    *mat,
+                                          aoclsparse_index_base base,
+                                          aoclsparse_int        M,
+                                          aoclsparse_int        N,
+                                          aoclsparse_int        nnz,
+                                          aoclsparse_int       *row_ptr,
+                                          aoclsparse_int       *col_idx,
+                                          T                    *val);
 
 template <typename T>
 aoclsparse_status aoclsparse_create_csc_t(aoclsparse_matrix    *mat,

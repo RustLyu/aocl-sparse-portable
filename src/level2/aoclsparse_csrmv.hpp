@@ -67,57 +67,57 @@ static aoclsparse_status ref_csrmv_gn(aoclsparse_index_base base,
         aoclsparse_int j_end = csr_row_ptr[i + 1];
 
 #ifdef __ARM_NEON
-        if constexpr(std::is_same_v<T, float>)
+        if(std::is_same<T, float>::value)
         {
+            const float *v = reinterpret_cast<const float*>(csr_val_fix);
+            const float *xf = reinterpret_cast<const float*>(x_fix);
             float32x4_t vsum = aoclsparse_neon::setzero();
             for(; j + 7 < j_end; j += 4)
             {
-                // Prefetch the next set of x gather targets
-                aoclsparse_neon::prefetch_gather(&x_fix[csr_col_ind_fix[j + 4]],
-                                                 &x_fix[csr_col_ind_fix[j + 5]],
-                                                 &x_fix[csr_col_ind_fix[j + 6]],
-                                                 &x_fix[csr_col_ind_fix[j + 7]]);
-                float32x4_t vv = aoclsparse_neon::loadu(&csr_val_fix[j]);
-                float32x4_t vx = aoclsparse_neon::gather(&x_fix[csr_col_ind_fix[j]],
-                                                          &x_fix[csr_col_ind_fix[j + 1]],
-                                                          &x_fix[csr_col_ind_fix[j + 2]],
-                                                          &x_fix[csr_col_ind_fix[j + 3]]);
+                aoclsparse_neon::prefetch_gather(&xf[csr_col_ind_fix[j + 4]],
+                                                 &xf[csr_col_ind_fix[j + 5]],
+                                                 &xf[csr_col_ind_fix[j + 6]],
+                                                 &xf[csr_col_ind_fix[j + 7]]);
+                float32x4_t vv = aoclsparse_neon::loadu(&v[j]);
+                float32x4_t vx = aoclsparse_neon::gather(&xf[csr_col_ind_fix[j]],
+                                                          &xf[csr_col_ind_fix[j + 1]],
+                                                          &xf[csr_col_ind_fix[j + 2]],
+                                                          &xf[csr_col_ind_fix[j + 3]]);
                 vsum           = aoclsparse_neon::fmadd(vv, vx, vsum);
             }
-            // Tail: 0-6 elements remaining, process 4 at a time + scalar
             for(; j + 3 < j_end; j += 4)
             {
-                float32x4_t vv = aoclsparse_neon::loadu(&csr_val_fix[j]);
-                float32x4_t vx = aoclsparse_neon::gather(&x_fix[csr_col_ind_fix[j]],
-                                                          &x_fix[csr_col_ind_fix[j + 1]],
-                                                          &x_fix[csr_col_ind_fix[j + 2]],
-                                                          &x_fix[csr_col_ind_fix[j + 3]]);
+                float32x4_t vv = aoclsparse_neon::loadu(&v[j]);
+                float32x4_t vx = aoclsparse_neon::gather(&xf[csr_col_ind_fix[j]],
+                                                          &xf[csr_col_ind_fix[j + 1]],
+                                                          &xf[csr_col_ind_fix[j + 2]],
+                                                          &xf[csr_col_ind_fix[j + 3]]);
                 vsum           = aoclsparse_neon::fmadd(vv, vx, vsum);
             }
             result = aoclsparse_neon::hsum(vsum);
         }
-        else if constexpr(std::is_same_v<T, double>)
+        else if(std::is_same<T, double>::value)
         {
-            float64x2_t vsum = aoclsparse_neon::setzero();
+            const double *v = reinterpret_cast<const double*>(csr_val_fix);
+            const double *xf = reinterpret_cast<const double*>(x_fix);
+            float64x2_t vsum = aoclsparse_neon::setzero_f64();
             for(; j + 3 < j_end; j += 2)
             {
-                // Prefetch the next pair of x gather targets
-                aoclsparse_neon::prefetch_gather(&x_fix[csr_col_ind_fix[j + 2]],
-                                                 &x_fix[csr_col_ind_fix[j + 3]]);
-                float64x2_t vv = aoclsparse_neon::loadu(&csr_val_fix[j]);
-                float64x2_t vx = aoclsparse_neon::gather(&x_fix[csr_col_ind_fix[j]],
-                                                          &x_fix[csr_col_ind_fix[j + 1]]);
-                vsum           = aoclsparse_neon::fmadd(vv, vx, vsum);
+                aoclsparse_neon::prefetch_gather_f64(&xf[csr_col_ind_fix[j + 2]],
+                                                     &xf[csr_col_ind_fix[j + 3]]);
+                float64x2_t vv = aoclsparse_neon::loadu(&v[j]);
+                float64x2_t vx = aoclsparse_neon::gather_f64(&xf[csr_col_ind_fix[j]],
+                                                              &xf[csr_col_ind_fix[j + 1]]);
+                vsum           = aoclsparse_neon::fmadd_f64(vv, vx, vsum);
             }
-            // Tail: 0-2 elements remaining
             for(; j + 1 < j_end; j += 2)
             {
-                float64x2_t vv = aoclsparse_neon::loadu(&csr_val_fix[j]);
-                float64x2_t vx = aoclsparse_neon::gather(&x_fix[csr_col_ind_fix[j]],
-                                                          &x_fix[csr_col_ind_fix[j + 1]]);
-                vsum           = aoclsparse_neon::fmadd(vv, vx, vsum);
+                float64x2_t vv = aoclsparse_neon::loadu(&v[j]);
+                float64x2_t vx = aoclsparse_neon::gather_f64(&xf[csr_col_ind_fix[j]],
+                                                              &xf[csr_col_ind_fix[j + 1]]);
+                vsum           = aoclsparse_neon::fmadd_f64(vv, vx, vsum);
             }
-            result = aoclsparse_neon::hsum(vsum);
+            result = aoclsparse_neon::hsum_f64(vsum);
         }
 #endif
         for(; j < j_end; j++)
@@ -178,12 +178,13 @@ static aoclsparse_status ref_csrmv_th(aoclsparse_index_base base,
         aoclsparse_int j_end = row_end;
 
 #ifdef __ARM_NEON
-        if constexpr(!is_herm && std::is_same_v<T, float>)
+        if(!is_herm && std::is_same<T, float>::value)
         {
-            float32x4_t vaxi = aoclsparse_neon::set1(axi);
+            const float *v = reinterpret_cast<const float*>(csr_val_fix);
+            float32x4_t vaxi = aoclsparse_neon::set1(*reinterpret_cast<const float*>(&axi));
             for(; j + 3 < j_end; j += 4)
             {
-                float32x4_t vv = aoclsparse_neon::loadu(&csr_val_fix[j]);
+                float32x4_t vv = aoclsparse_neon::loadu(&v[j]);
                 float32x4_t vp = aoclsparse_neon::mul(vv, vaxi);
                 y_fix[csr_col_ind_fix[j]] += vgetq_lane_f32(vp, 0);
                 y_fix[csr_col_ind_fix[j + 1]] += vgetq_lane_f32(vp, 1);
@@ -191,13 +192,14 @@ static aoclsparse_status ref_csrmv_th(aoclsparse_index_base base,
                 y_fix[csr_col_ind_fix[j + 3]] += vgetq_lane_f32(vp, 3);
             }
         }
-        else if constexpr(!is_herm && std::is_same_v<T, double>)
+        else if(!is_herm && std::is_same<T, double>::value)
         {
-            float64x2_t vaxi = aoclsparse_neon::set1(axi);
+            const double *v = reinterpret_cast<const double*>(csr_val_fix);
+            float64x2_t vaxi = aoclsparse_neon::set1_f64(*reinterpret_cast<const double*>(&axi));
             for(; j + 1 < j_end; j += 2)
             {
-                float64x2_t vv = aoclsparse_neon::loadu(&csr_val_fix[j]);
-                float64x2_t vp = aoclsparse_neon::mul(vv, vaxi);
+                float64x2_t vv = aoclsparse_neon::loadu(&v[j]);
+                float64x2_t vp = aoclsparse_neon::mul_f64(vv, vaxi);
                 y_fix[csr_col_ind_fix[j]] += vgetq_lane_f64(vp, 0);
                 y_fix[csr_col_ind_fix[j + 1]] += vgetq_lane_f64(vp, 1);
             }
@@ -206,7 +208,7 @@ static aoclsparse_status ref_csrmv_th(aoclsparse_index_base base,
         for(; j < j_end; j++)
         {
             aoclsparse_int col_idx = csr_col_ind_fix[j];
-            if constexpr(is_herm)
+            if(is_herm)
                 y_fix[col_idx] += aoclsparse::conj(csr_val_fix[j]) * axi;
             else
                 y_fix[col_idx] += csr_val_fix[j] * axi;
@@ -335,7 +337,7 @@ static aoclsparse_status ref_csrmv_tri_th(const aoclsparse_mat_descr descr,
         for(aoclsparse_int j = rstart; j < rend; j++)
         {
             aoclsparse_int col_idx = csr_col_ind_fix[j];
-            if constexpr(is_herm)
+            if(is_herm)
                 y_fix[col_idx] += aoclsparse::conj(csr_val_fix[j]) * axi;
             else
                 y_fix[col_idx] += csr_val_fix[j] * axi;
@@ -373,7 +375,7 @@ static aoclsparse_status csrmv_symm(aoclsparse_index_base base,
     {
         aoclsparse_int diag_idx      = csr_row_ptr[i + 1] - base - 1;
         aoclsparse_int last_ele_diag = !((csr_col_ind[diag_idx] - base) ^ i);
-        y[i] += last_ele_diag * alpha * csr_val[diag_idx] * x[i];
+        y[i] += static_cast<T>(last_ele_diag) * alpha * csr_val[diag_idx] * x[i];
         aoclsparse_int end = csr_row_ptr[i + 1] - base - last_ele_diag;
         for(aoclsparse_int j = (csr_row_ptr[i] - base); j < end; j++)
         {
@@ -621,7 +623,7 @@ aoclsparse_status aoclsparse_csrmv_t(aoclsparse_operation       trans,
 
     doid lcl_doid;
 
-    if constexpr(!do_check)
+    if(!do_check)
     {
         lcl_doid = d_id;
     }
@@ -681,7 +683,7 @@ aoclsparse_status aoclsparse_csrmv_t(aoclsparse_operation       trans,
     }
 
     // Portable dispatch: all DOIDs mapped directly to scalar reference kernels
-    if constexpr(is_dt_complex<T>())
+    if(is_dt_complex<T>())
     {
         switch(lcl_doid)
         {

@@ -49,8 +49,8 @@ namespace aoclsparse
     template <typename T>
     constexpr T conj(const T a)
     {
-        if constexpr(std::is_same_v<T, std::complex<double>>
-                     || std::is_same_v<T, std::complex<float>>)
+        if(std::is_same<T, std::complex<double>>::value
+                     || std::is_same<T, std::complex<float>>::value)
         {
             return std::conj(a);
         }
@@ -66,18 +66,18 @@ namespace aoclsparse_numeric
     {
         constexpr operator T() const noexcept
         {
-            if constexpr(std::is_same_v<T, float>)
+            if(std::is_same<T, float>::value)
                 return 1.0f;
-            else if constexpr(std::is_same_v<T, double>)
+            else if(std::is_same<T, double>::value)
                 return 1.0;
-            else if constexpr(std::is_same_v<T, std::complex<float>>
-                              || std::is_same_v<T, aoclsparse_float_complex>)
+            else if(std::is_same<T, std::complex<float>>::value
+                              || std::is_same<T, aoclsparse_float_complex>::value)
             {
                 T v{1.0f, 0.0f};
                 return v;
             }
-            else if constexpr(std::is_same_v<T, std::complex<double>>
-                              || std::is_same_v<T, aoclsparse_double_complex>)
+            else if(std::is_same<T, std::complex<double>>::value
+                              || std::is_same<T, aoclsparse_double_complex>::value)
             {
                 T v{1.0, 0.0};
                 return v;
@@ -339,8 +339,8 @@ namespace aoclsparse_numeric
     };
 
     /* Provide max/min for aoclsparse_int (safe from Windows min/max macro collision) */
-    inline constexpr aoclsparse_int int_max = (std::numeric_limits<aoclsparse_int>::max)();
-    inline constexpr aoclsparse_int int_min = (std::numeric_limits<aoclsparse_int>::min)();
+    constexpr aoclsparse_int int_max = (std::numeric_limits<aoclsparse_int>::max)();
+    constexpr aoclsparse_int int_min = (std::numeric_limits<aoclsparse_int>::min)();
 }
 
 /* Convenience operator for comparing with zero<T>
@@ -353,14 +353,38 @@ namespace aoclsparse_numeric
  * set tolerance (eps>0) to query if variable (a) can be considered zero or not, use a tolerance
  * approach such as |a| < eps.
  */
+namespace detail
+{
+    template <typename T>
+    constexpr bool is_zero_impl(const T &lhs, std::true_type)
+    {
+        return lhs.real == 0 && lhs.imag == 0;
+    }
+    template <typename T>
+    constexpr bool is_zero_impl(const T &lhs, std::false_type)
+    {
+        return lhs == (T)0;
+    }
+    template <typename T>
+    constexpr bool is_not_zero_impl(const T &lhs, std::true_type)
+    {
+        return lhs.real != 0 || lhs.imag != 0;
+    }
+    template <typename T>
+    constexpr bool is_not_zero_impl(const T &lhs, std::false_type)
+    {
+        return lhs != (T)0;
+    }
+}
+
 template <typename T>
 constexpr bool operator==(const T &lhs, [[maybe_unused]] const aoclsparse_numeric::zero<T> &_)
 {
-    if constexpr(std::is_same_v<T, aoclsparse_float_complex>
-                 || std::is_same_v<T, aoclsparse_double_complex>)
-        return lhs.real == 0 && lhs.imag == 0;
-    else
-        return lhs == (T)0;
+    using is_complex = std::integral_constant<
+        bool,
+        std::is_same<T, aoclsparse_float_complex>::value
+            || std::is_same<T, aoclsparse_double_complex>::value>;
+    return detail::is_zero_impl(lhs, is_complex{});
 }
 
 template <typename T>
@@ -372,11 +396,11 @@ constexpr bool operator==(const aoclsparse_numeric::zero<T> &lhs, const T &rhs)
 template <typename T>
 constexpr bool operator!=(const T &lhs, [[maybe_unused]] const aoclsparse_numeric::zero<T> &_)
 {
-    if constexpr(std::is_same_v<T, aoclsparse_float_complex>
-                 || std::is_same_v<T, aoclsparse_double_complex>)
-        return lhs.real != 0 || lhs.imag != 0;
-    else
-        return lhs != (T)0;
+    using is_complex = std::integral_constant<
+        bool,
+        std::is_same<T, aoclsparse_float_complex>::value
+            || std::is_same<T, aoclsparse_double_complex>::value>;
+    return detail::is_not_zero_impl(lhs, is_complex{});
 }
 
 template <typename T>
@@ -549,7 +573,7 @@ template <typename T>
 bool aoclsparse_is_negative_or_nearzero(const T &value, tolerance_t<T> scale = (tolerance_t<T>)1e-2)
 {
     const tolerance_t<T> safe_macheps = eps_tolerance<T>(scale);
-    if constexpr(std::is_same_v<T, float> || std::is_same_v<T, double>)
+    if(std::is_same<T, float>::value || std::is_same<T, double>::value)
     {
         return (value <= safe_macheps);
     }
@@ -567,8 +591,8 @@ namespace aoclsparse
     {
         constexpr operator bool() const
         {
-            if constexpr(std::is_same_v<T, std::complex<double>>
-                         || std::is_same_v<T, std::complex<float>>)
+            if(std::is_same<T, std::complex<double>>::value
+                         || std::is_same<T, std::complex<float>>::value)
                 return true;
             else
                 return false;
