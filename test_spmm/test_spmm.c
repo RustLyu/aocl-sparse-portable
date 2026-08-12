@@ -3,6 +3,29 @@
 #include "aoclsparse.h"
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
+static int64_t timespec_diff_ns(struct timespec *end, struct timespec *start)
+{
+    return (end->tv_sec - start->tv_sec) * 1000000000LL
+           + (end->tv_nsec - start->tv_nsec);
+}
+
+static const char *format_ns(int64_t ns)
+{
+    static char buf[32];
+    if(ns < 1000)
+        snprintf(buf, sizeof(buf), "%lld ns", (long long)ns);
+    else if(ns < 1000000)
+        snprintf(buf, sizeof(buf), "%.2f us", ns / 1000.0);
+    else if(ns < 1000000000)
+        snprintf(buf, sizeof(buf), "%.2f ms", ns / 1000000.0);
+    else
+        snprintf(buf, sizeof(buf), "%.2f s", ns / 1000000000.0);
+    return buf;
+}
+
+#define ITERATIONS 1000
 
 int main()
 {
@@ -41,6 +64,9 @@ int main()
      */
     float expected[] = {11.0f, 14.0f, 9.0f, 12.0f, 55.0f, 64.0f, 55.0f, 68.0f};
 
+    struct timespec t1, t2;
+    int64_t         elapsed_cold, elapsed_warm, elapsed_total;
+
     printf("=== aoclsparse_scsrmm test ===\n\n");
 
     /* Create matrix descriptor */
@@ -62,29 +88,42 @@ int main()
         printf("FAILED (status=%d)\n", status);
         return 1;
     }
-    printf("OK\n");
+    printf("OK\n\n");
 
-    /* Compute C = alpha * A * B + beta * C */
-    printf("Computing SPMM (C = A * B)... ");
+    /* ---- Cold call ------------------------------------------------- */
+    memset(C, 0, sizeof(C));
+    clock_gettime(CLOCK_MONOTONIC, &t1);
     status = aoclsparse_scsrmm(aoclsparse_operation_none,
-                                alpha,
-                                A,
-                                descr,
-                                aoclsparse_order_row,
-                                B,
-                                n,
-                                n,  /* ldb = n for row-major */
-                                beta,
-                                C,
-                                n); /* ldc = n for row-major */
+                                alpha, A, descr, aoclsparse_order_row,
+                                B, n, n, beta, C, n);
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+    elapsed_cold = timespec_diff_ns(&t2, &t1);
     if(status != aoclsparse_status_success)
     {
         printf("FAILED (status=%d)\n", status);
         return 1;
     }
-    printf("OK\n\n");
 
-    /* Print and verify result */
+    /* ---- Warm-up + timed iterations --------------------------------- */
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    for(int iter = 0; iter < ITERATIONS; iter++)
+    {
+        memset(C, 0, sizeof(C));
+        aoclsparse_scsrmm(aoclsparse_operation_none,
+                          alpha, A, descr, aoclsparse_order_row,
+                          B, n, n, beta, C, n);
+    }
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+    elapsed_total = timespec_diff_ns(&t2, &t1);
+    elapsed_warm  = elapsed_total / ITERATIONS;
+
+    /* ---- Timing report ---------------------------------------------- */
+    printf("=== Timing (%d iterations) ===\n", ITERATIONS);
+    printf("  Cold call  : %12s\n", format_ns(elapsed_cold));
+    printf("  Warm avg   : %12s\n", format_ns(elapsed_warm));
+    printf("  Total      : %12s\n\n", format_ns(elapsed_total));
+
+    /* ---- Verification ----------------------------------------------- */
     printf("Result matrix C (4x2, row-major):\n");
     int pass = 1;
     for(int i = 0; i < m; i++)
