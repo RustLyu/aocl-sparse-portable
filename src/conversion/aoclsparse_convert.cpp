@@ -1149,7 +1149,7 @@ aoclsparse_status aoclsparse_convert_csr_t(const aoclsparse_matrix    src_mat,
         return status;
     }
 
-    if constexpr(std::is_same_v<T, std::complex<float>> || std::is_same_v<T, std::complex<double>>)
+    if(std::is_same<T, std::complex<float>>::value || std::is_same<T, std::complex<double>>::value)
     {
         if(op == aoclsparse_operation_conjugate_transpose)
         {
