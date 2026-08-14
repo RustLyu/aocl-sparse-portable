@@ -50,9 +50,12 @@ configure_file(
 add_library(aoclsparse_portable SHARED
     src/auxiliary/aoclsparse_auxiliary.cpp
     src/analysis/aoclsparse_csr_util.cpp
+    src/analysis/aoclsparse_analysis.cpp
+    src/conversion/aoclsparse_convert.cpp
     src/level2/aoclsparse_mv.cpp
     src/level3/aoclsparse_csradd.cpp
     src/level3/aoclsparse_sp2m.cpp
+    src/level3/aoclsparse_spmm.cpp
     src/level3/aoclsparse_csr2m.cpp
     src/level3/aoclsparse_sp2md.cpp
     src/level3/aoclsparse_csrmm.cpp
