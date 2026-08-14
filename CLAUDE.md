@@ -14,7 +14,7 @@ AOCL-Sparse Portable — a stripped-down C++14 port of AMD's AOCL-Sparse library
 ```bash
 ./build.sh
 ```
-This cross-compiles the shared library, the `test_spmm` test executable, and installs everything into `$HOME/opt/arm-v7-a/aocl-sparse-portable/`.
+This cross-compiles the shared library, the `test_aocl_sparse` test executable, and installs everything into `$HOME/opt/arm-v7-a/aocl-sparse-portable/`.
 
 ### Manual CMake configure + build
 ```bash
@@ -22,7 +22,7 @@ TOOLCHAIN="$HOME/tools/petaLinux/tools/linux-i386/gcc-arm-linux-gnueabi"
 
 cmake -S . -B build_arm_gcc \
     -DCMAKE_TOOLCHAIN_FILE=toolchain-arm-gnueabihf.cmake \
-    -DCMAKE_CXX_FLAGS="-mcpu=cortex-a15 -mfpu=neon -mfloat-abi=hard" \
+    -DCMAKE_CXX_FLAGS="-march=armv7-a -mfpu=neon -mfloat-abi=hard" \
     -DOpenMP_CXX_FLAGS="-fopenmp" \
     -DOpenMP_CXX_LIB_NAMES="gomp" \
     -DOpenMP_gomp_LIBRARY="${TOOLCHAIN}/arm-linux-gnueabihf/lib/libgomp.so" \
@@ -36,7 +36,7 @@ make -C build_arm_gcc -j$(nproc)
 ```bash
 cmake -S test_spmm -B test_spmm/build \
     -DCMAKE_TOOLCHAIN_FILE=toolchain-arm-gnueabihf.cmake \
-    -DCMAKE_C_FLAGS="-mcpu=cortex-a15 -mfpu=neon -mfloat-abi=hard"
+    -DCMAKE_C_FLAGS="-march=armv7-a -mfpu=neon -mfloat-abi=hard"
 make -C test_spmm/build -j$(nproc)
 ```
 

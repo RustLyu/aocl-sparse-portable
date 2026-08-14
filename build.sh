@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build script for AOCL-Sparse Portable (ARMv7-A cross-compilation)
-# Produces shared library + test_spmm executable.
+# Produces shared library + test_aocl_sparse executable.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -16,7 +16,7 @@ TOOLCHAIN_PREFIX="${TOOLCHAIN_DIR}/bin/arm-linux-gnueabihf"
 TOOLCHAIN_FILE="${SCRIPT_DIR}/toolchain-arm-gnueabihf.cmake"
 
 # --- CPU / FPU flags (adjust to match your target) -----------------
-CPU_FLAGS="-mcpu=cortex-a15 -mfpu=neon -mfloat-abi=hard"
+CPU_FLAGS="-march=armv7-a -mfpu=neon -mfloat-abi=hard"
 
 # --- OpenMP -------------------------------------------------------
 OMP_LIB="${TOOLCHAIN_DIR}/arm-linux-gnueabihf/lib/libgomp.so"
@@ -48,10 +48,10 @@ echo "Library built: ${BUILD_DIR}/libaoclsparse_portable.so"
 echo ""
 
 # ------------------------------------------------------------------
-# Step 2: Cross-compile the test_spmm executable
+# Step 2: Cross-compile the test_aocl_sparse executable
 # ------------------------------------------------------------------
 echo "=============================================="
-echo "Step 2: Building test_spmm ..."
+echo "Step 2: Building test_aocl_sparse ..."
 echo "=============================================="
 
 mkdir -p "${TEST_BUILD_DIR}"
@@ -62,7 +62,7 @@ cmake -S "${TEST_DIR}" -B "${TEST_BUILD_DIR}" \
 make -C "${TEST_BUILD_DIR}" -j$(nproc)
 
 echo ""
-echo "Test built: ${TEST_BUILD_DIR}/test_spmm"
+echo "Test built: ${TEST_BUILD_DIR}/test_aocl_sparse"
 echo ""
 
 # ------------------------------------------------------------------
@@ -92,10 +92,10 @@ echo "=============================================="
 echo "Build complete"
 echo "=============================================="
 file "${BUILD_DIR}/libaoclsparse_portable.so"
-file "${TEST_BUILD_DIR}/test_spmm"
+file "${TEST_BUILD_DIR}/test_aocl_sparse"
 echo ""
 echo "Library:  ${INSTALL_PREFIX}/lib/libaoclsparse_portable.so"
 echo "Headers:  ${INSTALL_PREFIX}/include/"
 echo ""
 echo "Run on target:"
-echo "  LD_LIBRARY_PATH=. ./test_spmm"
+echo "  LD_LIBRARY_PATH=. ./test_aocl_sparse"
